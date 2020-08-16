@@ -1,3 +1,13 @@
+<h1> PEDE LOGO FRONT-END </h1>
+<h5> Below a brief description of the projects </h5>
+
+<p> <strong> Pede Logo System: <strong> Administrative area, where the general administrator of the application can operate</p>
+<p> <strong> Pede Logo Sistem: <strong> Area where employees and administrators can operate. </p>
+<p> <strong> Pede Logo User: <strong> Panel where users can place their orders.</p>  
+  
+## Take a look at the application
+![Alt Text](https://media.giphy.com/media/ieh1mLQ4INzOiiFLhS/giphy.gif)
+
 Vuetify Material Dashboard](https://www.creative-tim.com/vuetify-material-dashboard) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/home?status=Vuetify%20Material%20Dashboard%20-%20Admin%20Template%20for%20Vue.js%20https%3A//www.creative-tim.com/product/vuetify-material-dashboard%20%23vuejs%20%23vuex%20%23dashboard%20%23vuetify%20%23vuetify%20material%20%20%40creativetim)
 
 
