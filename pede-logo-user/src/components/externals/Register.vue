@@ -1,0 +1,265 @@
+<template>
+  <v-container
+    fill-height
+    fluid
+    grid-list-xl
+  >
+    <v-row justify="center" >
+      <v-col cols="12" v-if="!from_establishment">
+        <v-card color="primary" class="white--text pa-3">
+          <v-row>
+            <v-col cols="10">
+              <h3 class="title font-weight-light"> {{title}} </h3>
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12">
+        <form class="pl-5 pr-5 pb-6 form-config" >
+          <v-row>
+
+            <v-col
+              cols="12"
+              sm="12"
+            >
+              <v-text-field
+                outlined
+                v-model="user.email"
+                :error-messages="userEmailErrors"
+                label="Email do Usuário"
+                required
+                type="email"
+                @input="$v.user.email.$touch()"
+                @blur="$v.user.email.$touch()"
+              ></v-text-field>
+            </v-col>
+
+            <v-col
+              cols="12"
+              sm="12"
+            >
+              <v-text-field
+                outlined
+                v-model="user.name"
+                :error-messages="userNameErrors"
+                label="Nome do Usuário"
+                required
+                @input="$v.user.name.$touch()"
+                @blur="$v.user.name.$touch()"
+              ></v-text-field>
+            </v-col>
+
+            <v-col
+              cols="12"
+              sm="12"
+            >
+              <v-text-field
+                outlined
+                v-model="user.password"
+                :error-messages="userPasswordErrors"
+                label="Senha"
+                type="password"
+                required
+                @input="$v.user.password.$touch()"
+                @blur="$v.user.password.$touch()"
+              ></v-text-field>
+            </v-col>
+
+            <v-col
+              cols="12"
+              sm="12"
+            >
+              <v-text-field
+                outlined
+                v-model="user.password_confirmation"
+                :error-messages="userPasswordConfirmationErrors"
+                label="Confirmar Senha"
+                type="password"
+                required
+                @input="$v.user.password_confirmation.$touch()"
+                @blur="$v.user.password_confirmation.$touch()"
+              ></v-text-field>
+            </v-col>
+
+            <v-row
+              align="center"
+              justify="center"
+            >
+              <v-btn class="mr-4" @click="beforeSubmit" color="green" dark>  
+                <span v-if="!loading"> {{button_action}} </span> 
+                <v-progress-circular v-if="loading" indeterminate color="blue" /> 
+              </v-btn>
+              <v-btn @click="clear" color="error"> Cancelar </v-btn>
+            </v-row>
+
+          </v-row>
+        </form>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
+
+<script>
+  import { securedAxiosInstance, plainAxiosInstance } from '../../packs/plugins/axios'
+  import { validationMixin } from 'vuelidate'
+  import { required, maxLength, email, sameAs } from 'vuelidate/lib/validators'
+
+  export default {
+    mixins: [validationMixin],
+
+    validations: {
+      user: {
+        email: { required, email },
+        password: { required },
+        password_confirmation:  { required },
+        role: { required },
+        name: { required }
+      }
+    },
+
+    components: {},
+
+    props: ['from_establishment'],
+
+    mounted() {
+      window.addEventListener("keypress", e => {
+        if (e.keyCode == 13 ) {
+          this.beforeSubmit()
+        }
+	    });
+      this.getEstablishments()
+    },
+
+    data: () => ({
+      user: {
+        email: '',
+        password: '',
+        password_confirmation: '',
+        name: '',
+        role: 1,
+        establishment: ''
+      },
+
+      edit: false,
+      title: "Cadastre na plataforma",
+      button_action: "Cadastrar",
+      user_id: null,
+
+      items: [
+        { value: 'Administrador do Estabelecimento', role: 2},
+      ],
+
+      establishments: []
+
+    }),
+
+    computed: {
+      userEmailErrors () {
+        const errors = []
+        if (!this.$v.user.email.$dirty) return errors
+        !this.$v.user.email && errors.push('O e-mail não é válido.')
+        !this.$v.user.email.required && errors.push('Insira um e-mail.')
+        return errors
+      },
+
+      userPasswordErrors() {
+        const errors = []
+        if (!this.$v.user.password.$dirty) return errors
+        !this.$v.user.password.required && errors.push('Insira a senha.')
+        return errors
+      },
+
+      userPasswordConfirmationErrors() {
+        const errors = []
+        if (!this.$v.user.password_confirmation.$dirty) return errors
+        !this.$v.user.password_confirmation.required && errors.push('Confirme a senha.')
+        return errors
+      },
+
+      userRoleErrors() {
+        const errors = []
+        if (!this.$v.user.role.$dirty) return errors
+        !this.$v.user.role.required && errors.push('Escolha um papel para o usuário.')
+        return errors
+      },
+
+      userNameErrors() {
+        const errors = []
+        if (!this.$v.user.name.$dirty) return errors
+        !this.$v.user.name.required && errors.push('Insira um nome para o usuário.')
+        return errors
+      }
+
+    },
+
+    methods: {
+      beforeSubmit() {
+        this.$v.$touch()
+
+        if ( this.$v.$invalid) {
+          return
+        } else {
+          this.submit()
+        }
+      },
+
+      async submit() {
+        let response = null
+
+        if ( this.edit ) {
+          await securedAxiosInstance.patch(`/api/v1/private/users/${this.user_id}`,
+            {
+              user: this.user,
+              access_token: localStorage.getItem('access_token')
+            }
+          )
+          .then((result) => {
+            response = result
+          }).catch((err) => {
+            response = err
+          });
+
+        } else {
+          await plainAxiosInstance.post('/api/v1/users',
+            {
+              email: this.user.email,
+              password: this.user.password,
+              password_confirmation: this.user.password_confirmation,
+              name: this.user.name,
+            }
+          )
+          .then((result) => {
+            response = result
+          }).catch((err) => {
+            response = err
+          });
+        }
+
+        if ( response.status == 201 ) {
+          this.$router.push(`/sign-in`)
+        }
+      },
+
+      
+
+    
+
+    
+
+  }
+}
+</script>
+
+
+<style scoped>
+
+  .cursor-type {
+    cursor: pointer;
+  }
+
+  .form-config {
+    background-color: white;
+    margin-top: -25px;
+  }
+</style>
